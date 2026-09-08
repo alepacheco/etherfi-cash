@@ -1,0 +1,25 @@
+{
+  "name": "etherfi-cash",
+  "version": "0.1.0",
+  "description": "Unofficial, read-only TypeScript client for the Ether.fi Cash API",
+  "type": "module",
+  "license": "MIT",
+  "author": "Alejandro Pacheco",
+  "repository": { "type": "git", "url": "git+https://github.com/alepacheco/etherfi-cash.git" },
+  "homepage": "https://github.com/alepacheco/etherfi-cash#readme",
+  "bugs": "https://github.com/alepacheco/etherfi-cash/issues",
+  "keywords": ["etherfi", "ether.fi", "cash", "api", "typescript", "transactions"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE", "examples", "docs"],
+  "sideEffects": false,
+  "engines": { "node": ">=22" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs",
+    "check": "npm run build && npm test",
+    "prepack": "npm run check"
+  },
+  "devDependencies": { "typescript": "5.9.3" }
+}
