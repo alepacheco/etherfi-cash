@@ -195,3 +195,32 @@ test("safe ID is encoded as a single path component", async () => {
   } });
   await api.getAccountDetails();
 });
+
+
+test("unpaid claim-based accruals omit reversals without becoming paid zero-reversal rows", async () => {
+  for (const cashbackInUsdc of [370200, "370200"]) {
+    const accrual = { cashbackInUsdc, cashbackInToken: "0", paid: false, recipientType: "vault" };
+    const rows = [transaction(), transaction({ id: "example-unpaid", status: "PENDING", cashbacks: [accrual] })];
+    const result = await client(page(rows)).listCardTransactions();
+    assert.deepEqual(result.data, rows);
+    assert.equal(Object.hasOwn(result.data[1].cashbacks[0], "reversedInUsdc"), false);
+  }
+});
+
+test("missing reversals require explicit unpaid state and malformed values still fail the whole page", async () => {
+  for (const cashback of [
+    { cashbackInUsdc: "370200" },
+    { cashbackInUsdc: "370200", paid: true },
+    { cashbackInUsdc: "370200", paid: "false" },
+    { cashbackInUsdc: "370200", paid: null, reversedInUsdc: 0 },
+    { cashbackInUsdc: "bad", paid: false },
+    ...[null, "bad", "", false].map(reversedInUsdc => ({ cashbackInUsdc: "370200", paid: false, reversedInUsdc })),
+  ]) {
+    await assert.rejects(client(page([transaction(), transaction({ cashbacks: [cashback] })])).listCardTransactions(), EtherfiResponseError);
+  }
+});
+
+test("paid entries retain exact reversal values", async () => {
+  const row = transaction({ cashbacks: [{ cashbackInUsdc: "370200", reversedInUsdc: "100000", paid: true }] });
+  assert.deepEqual((await client(page([row])).listCardTransactions()).data, [row]);
+});

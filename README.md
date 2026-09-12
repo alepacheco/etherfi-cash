@@ -146,7 +146,16 @@ uses an `AbortSignal` and produces `EtherfiRequestError` with `reason: "aborted"
 - `billAmount` is in billed currency units, with the upstream sign preserved.
 - `cashbacks[].cashbackInUsdc` and `reversedInUsdc` are USDC micro-units: divide
   their difference by `1_000_000` to express net cashback in USDC. Choose decimal
-  precision and rounding in your application.
+  precision and rounding in your application. This describes legacy/paid entries.
+- Claim-based cashback can appear as `paid: false` with no `reversedInUsdc`.
+  The SDK preserves that absence. Do not treat it as a zero reversal or a paid
+  deposit. Missing reversals remain invalid for paid entries or entries without
+  an explicit `paid: false`; malformed numeric values always fail validation.
+- The current rewards flow calculates pending cashback in dollars, converts it
+  to ETHFI at clearing, locks it for seven days, and requires a manual claim
+  (minimum $5). Card history accruals do not prove a completed claim. See the
+  [official cashback guide](https://help.ether.fi/en/articles/262374-how-does-cashback-work).
+  This SDK does not claim rewards or infer claim settlement from card status.
 - `status: "REFUND"` identifies a refund row. `userStatus` or `detailedStatus`
   can describe its lifecycle. All status strings remain open-ended.
 - Unknown fields survive intact. The published types cover the fields this
