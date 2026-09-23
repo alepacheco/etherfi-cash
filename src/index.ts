@@ -4,7 +4,10 @@ export type ApiNumber = number | string;
 export interface Cashback {
   /** USDC micro-units (1 USDC = 1,000,000 units). */
   cashbackInUsdc: ApiNumber;
-  /** Omitted on unpaid claim-based accruals; absence is not a zero reversal. */
+  /**
+   * Omitted when the feed has no reversal amount. Absence is not a zero reversal,
+   * including on paid rows. Present values stay exact.
+   */
   reversedInUsdc?: ApiNumber;
   /** False means an accrual, not a payout into the account. */
   paid?: boolean;
@@ -126,11 +129,12 @@ function validTransaction(value: Record<string, unknown>): boolean {
     }
   }
   if (value.cashbacks !== undefined && (!Array.isArray(value.cashbacks) || !value.cashbacks.every(
-    // The claim-based feed synthesizes unpaid accruals without reversal data.
-    // Preserve absence rather than inventing a zero or accepting malformed payouts.
+    // Claim-based rows omit reversedInUsdc for unpaid accruals and for paid rows
+    // that carry no reversal amount. Keep that absence; do not invent a zero.
+    // A cashback with no paid flag must still include a numeric reversal.
     item => record(item) && numeric(item.cashbackInUsdc)
       && (item.paid === undefined || typeof item.paid === "boolean")
-      && (numeric(item.reversedInUsdc) || (item.reversedInUsdc === undefined && item.paid === false)),
+      && (numeric(item.reversedInUsdc) || (item.reversedInUsdc === undefined && typeof item.paid === "boolean")),
   ))) return false;
   return true;
 }

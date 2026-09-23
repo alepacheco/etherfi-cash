@@ -1,6 +1,6 @@
 {
   "name": "etherfi-cash",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Unofficial, read-only TypeScript client for the Ether.fi Cash API",
   "type": "module",
   "license": "MIT",

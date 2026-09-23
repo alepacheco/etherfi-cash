@@ -207,13 +207,21 @@ test("unpaid claim-based accruals omit reversals without becoming paid zero-reve
   }
 });
 
-test("missing reversals require explicit unpaid state and malformed values still fail the whole page", async () => {
+test("paid rows may omit a reversal without turning that absence into zero", async () => {
+  const cashbacks = [{ cashbackInUsdc: "370200", paid: true, cashbackInToken: "1" }];
+  const row = transaction({ id: "example-paid-no-reversal", cashbacks });
+  const result = await client(page([row])).listCardTransactions();
+  assert.deepEqual(result.data, [row]);
+  assert.equal(Object.hasOwn(result.data[0].cashbacks[0], "reversedInUsdc"), false);
+});
+
+test("missing reversals still require an explicit paid flag, and malformed values fail the whole page", async () => {
   for (const cashback of [
     { cashbackInUsdc: "370200" },
-    { cashbackInUsdc: "370200", paid: true },
     { cashbackInUsdc: "370200", paid: "false" },
     { cashbackInUsdc: "370200", paid: null, reversedInUsdc: 0 },
     { cashbackInUsdc: "bad", paid: false },
+    { cashbackInUsdc: "370200", paid: true, reversedInUsdc: null },
     ...[null, "bad", "", false].map(reversedInUsdc => ({ cashbackInUsdc: "370200", paid: false, reversedInUsdc })),
   ]) {
     await assert.rejects(client(page([transaction(), transaction({ cashbacks: [cashback] })])).listCardTransactions(), EtherfiResponseError);

@@ -147,10 +147,10 @@ uses an `AbortSignal` and produces `EtherfiRequestError` with `reason: "aborted"
 - `cashbacks[].cashbackInUsdc` and `reversedInUsdc` are USDC micro-units: divide
   their difference by `1_000_000` to express net cashback in USDC. Choose decimal
   precision and rounding in your application. This describes legacy/paid entries.
-- Claim-based cashback can appear as `paid: false` with no `reversedInUsdc`.
-  The SDK preserves that absence. Do not treat it as a zero reversal or a paid
-  deposit. Missing reversals remain invalid for paid entries or entries without
-  an explicit `paid: false`; malformed numeric values always fail validation.
+- Claim-based cashback can omit `reversedInUsdc` when `paid` is `false` or
+  `true`. The SDK preserves that absence. Do not treat it as a zero reversal.
+  A cashback with no `paid` flag must still include a numeric reversal, and
+  malformed numeric values always fail validation.
 - The current rewards flow calculates pending cashback in dollars, converts it
   to ETHFI at clearing, locks it for seven days, and requires a manual claim
   (minimum $5). Card history accruals do not prove a completed claim. See the
